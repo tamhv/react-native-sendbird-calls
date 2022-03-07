@@ -18,14 +18,18 @@ export default class App extends Component<{}> {
 
   constructor(props){
     super(props)
+    //1
     SendBirdCalls.setup('10A8BD3E-3A52-4BC4-B3A7-EA3C2375D599')
   }
 
   componentDidMount () {
+    //2
     SendBirdCalls.addEventListener('DirectCallDidConnect', this.onDirectCallDidConnect)
     SendBirdCalls.addEventListener('DirectCallDidEnd', this.onDirectCallDidEnd)
     const caller  = '1111'
+    //3
     SendBirdCalls.authenticate(caller)
+    //4
     SendBirdCalls.setupVoIP()
 
   }
@@ -46,6 +50,7 @@ export default class App extends Component<{}> {
 
   call = async () => {
     const callee = '123'
+    //5
     const data = await SendBirdCalls.dial(callee);
     const {callId} = data
     this.setState({calling:true, callId})
@@ -53,6 +58,7 @@ export default class App extends Component<{}> {
 
   endCall = async () => {
     const {callId} = this.state
+    //6
     const data = await SendBirdCalls.endCall(callId);
     console.log('endcall', data)
     this.setState({calling:false, callId: null, connected:false})
