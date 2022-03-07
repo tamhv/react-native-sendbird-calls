@@ -49,13 +49,6 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         }
     }
 
-//     @objc func addDelegate(_ identifier: String) -> Void {
-//      SendBirdCall.addDelegate(self, identifier: identifier)
-//         let appDelegate = UIApplication.shared.delegate as! SendBirdCallDelegate
-//         SendBirdCall.addDelegate(appDelegate, identifier: identifier)
-//         print(self)
-//     }
-
     @objc func dial(_ calleeId: String, isVideoCall: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock){
 
         let callOptions = CallOptions(isAudioEnabled: true, isVideoEnabled: true, useFrontCamera: true)
@@ -99,7 +92,6 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
 
     // MARK: - SendBirdCalls - Registering push token.
     func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
-//        UserDefaults.standard.voipPushToken = pushCredentials.token
         print("RNSendBirdCalls:Push token is \(pushCredentials.token)")
 
         SendBirdCall.registerVoIPPush(token: pushCredentials.token, unique: true) { error in
