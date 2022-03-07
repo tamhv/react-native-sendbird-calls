@@ -2,18 +2,29 @@ import Foundation
 import CallKit
 import PushKit
 import SendBirdCalls
-
+import UIKit
+import React
 
 @objc(RNSendBirdCalls)
-class RNSendBirdCalls: NSObject, SendBirdCallDelegate, DirectCallDelegate, PKPushRegistryDelegate {
+class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate, PKPushRegistryDelegate {
 
     var queue: DispatchQueue = DispatchQueue(label: "RNSendBirdCalls")
     var voipRegistry: PKPushRegistry?
+
+    static let DirectCallDidConnect = "DirectCallDidConnect"
+    static let DirectCallDidEnd = "DirectCallDidEnd"
 
     override init() {
         super.init()
         SendBirdCall.addDelegate(self, identifier: "RNSendBirdCalls")
     }
+
+    override func supportedEvents() -> [String]! {
+        return [
+            RNSendBirdCalls.DirectCallDidConnect,
+            RNSendBirdCalls.DirectCallDidEnd
+        ]
+      }
 
     @objc func configure(_ appId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         SendBirdCall.configure(appId: appId)
@@ -38,19 +49,39 @@ class RNSendBirdCalls: NSObject, SendBirdCallDelegate, DirectCallDelegate, PKPus
         }
     }
 
-    @objc func addDelegate(_ identifier: String) -> Void {
+//     @objc func addDelegate(_ identifier: String) -> Void {
 //      SendBirdCall.addDelegate(self, identifier: identifier)
 //         let appDelegate = UIApplication.shared.delegate as! SendBirdCallDelegate
 //         SendBirdCall.addDelegate(appDelegate, identifier: identifier)
 //         print(self)
+//     }
+
+    @objc func dial(_ calleeId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock){
+        let params = DialParams(calleeId: calleeId, callOptions: CallOptions())
+
+        let directCall = SendBirdCall.dial(with: params) { call, error in
+            
+            guard let call = call, error == nil else {
+                reject("error_dial","Dial failed", nil)
+                return
+            }
+            // The call has been created successfully
+            resolve(["callId": call.callId])
+        }
+
+        directCall?.delegate = self
+
+//        UIApplication.shared.showCallController(with: directCall!)
     }
 
-    @objc func dial(){
-        let params = DialParams(calleeId: "123", callOptions: CallOptions())
-
-        let directCall = SendBirdCall.dial(with: params) { directCall, error in
-            // The call has been created successfully
+    @objc func endCall(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("error_get_call","Call not found",nil)
+            return
         }
+        call.end()
+        CXCallManager.shared.endCXCall(call)
+        resolve(["callId": callId, "caller":call.caller?.userId,"callee":call.callee?.userId])
     }
 
     @objc func voipRegistration() {
@@ -128,6 +159,13 @@ class RNSendBirdCalls: NSObject, SendBirdCallDelegate, DirectCallDelegate, PKPus
     // MARK: DirectCallDelegate
     func didConnect(_ call: DirectCall) {
      print("RNSendBirdCalls:didConnect")
+        //active timer call.duration
+        let params = [
+            "callId": call.callId as Any,
+            "callee": call.callee?.userId as Any,
+            "caller": call.caller?.userId as Any
+        ] as [String : Any]
+        self.sendEvent(withName: RNSendBirdCalls.DirectCallDidConnect, body:params)
     }
 
     func didEnd(_ call: DirectCall) {
@@ -135,15 +173,17 @@ class RNSendBirdCalls: NSObject, SendBirdCallDelegate, DirectCallDelegate, PKPus
        if let callUUID = call.callUUID {
            callId = callUUID
        }
-        print("RNSendBirdCalls:didEnd")
+       print("RNSendBirdCalls:didEnd")
+        let params = [
+            "callId": call.callId as Any,
+            "callee": call.callee?.userId as Any,
+            "caller": call.caller?.userId as Any
+        ] as [String : Any]
+        self.sendEvent(withName: RNSendBirdCalls.DirectCallDidEnd, body: params)
        CXCallManager.shared.endCall(for: callId, endedAt: Date(), reason: call.endResult)
 
        guard let callLog = call.callLog else { return }
        //UserDefaults.standard.callHistories.insert(CallHistory(callLog: callLog), at: 0)
        //CallHistoryViewController.main?.updateCallHistories()
-    }
-
-    func applicationWillTerminateAAA(_ application: UIApplication){
-          print("AAAA")
     }
 }

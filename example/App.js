@@ -11,38 +11,70 @@
 import React, { Component } from 'react'
 import { Platform,Button, StyleSheet, Text, View } from 'react-native'
 
-import RNSendBirdCalls from 'react-native-sendbird-calls'
-
+import {SendBirdCalls} from 'react-native-sendbird-calls'
 export default class App extends Component<{}> {
 
-  async componentDidMount () {
+  state = {}
 
-    try{
-      let r = await RNSendBirdCalls.configure('10A8BD3E-3A52-4BC4-B3A7-EA3C2375D599')
-      console.log('configured app id', r)
-
-      // RNSendBirdCalls.addDelegate('AppDelegate')
-
-      r = await RNSendBirdCalls.authenticate('1111', '')
-      console.log('user authenticated', r)
-    }catch (e) {
-      console.log('ERROR',e)
-    }
-
-    RNSendBirdCalls.voipRegistration();
-
+  constructor(props){
+    super(props)
+    SendBirdCalls.setup('10A8BD3E-3A52-4BC4-B3A7-EA3C2375D599')
   }
 
-  call = async () =>{
-    RNSendBirdCalls.dial();
+  componentDidMount () {
+    SendBirdCalls.addEventListener('DirectCallDidConnect', this.onDirectCallDidConnect)
+    SendBirdCalls.addEventListener('DirectCallDidEnd', this.onDirectCallDidEnd)
+    const caller  = '1111'
+    SendBirdCalls.authenticate(caller)
+    SendBirdCalls.setupVoIP()
+
+  }
+  componentWillUnmount () {
+    SendBirdCalls.removeAllEventListeners()
+  }
+
+  onDirectCallDidConnect = (data) =>{
+    console.log('onDirectCallDidConnect', data)
+    const {callId} = data
+    this.setState({connected:true, calling:true, callId})
+  }
+
+  onDirectCallDidEnd = (data) =>{
+    console.log('onDirectCallDidEnd', data)
+    this.setState({calling:false, callId:null, connected: false})
+  }
+
+  call = async () => {
+    const callee = '123'
+    const data = await SendBirdCalls.dial(callee);
+    const {callId} = data
+    this.setState({calling:true, callId})
+  }
+
+  endCall = async () => {
+    const {callId} = this.state
+    const data = await SendBirdCalls.endCall(callId);
+    console.log('endcall', data)
+    this.setState({calling:false, callId: null, connected:false})
   }
 
   render () {
+    const {calling, connected} = this.state
     return (
       <View style={styles.container}>
-        <Text>saaas</Text>
-
-        <Button title={'Call 123'} onPress={this.call}/>
+        <Text>Current userId: 1111</Text>
+        {calling ? (
+          <View>
+            {connected ? <View>
+              <Text>Connected (00:01...)</Text>
+            </View>:(<View>
+              <Text>Calling...</Text>
+            </View>)}
+            <Button title={'End call'} onPress={this.endCall}/>
+          </View>
+        ):(
+          <Button title={'Call userId=123'} onPress={this.call}/>
+        )}
       </View>
     )
   }
