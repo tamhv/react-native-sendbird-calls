@@ -20,7 +20,8 @@
     "baseUrl": "https://github.com/tamhv/react-native-sendbird-calls"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "sendbird calls"
   ],
   "author": {
     "name": "Tam Huynh",

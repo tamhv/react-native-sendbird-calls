@@ -1,10 +1,11 @@
-// main index.js
+import { NativeModules } from 'react-native'
 
-import { NativeModules } from 'react-native';
-const { RNSendBirdCalls } = NativeModules;
-import SendBirdCalls from './SendBirdCalls'
+const { RNSendBirdCalls } = NativeModules
+import SendBirdCalls from './src/SendBirdCalls'
+import SendBirdCallsVideo from './src/SendBirdCallsVideo'
 
 export {
   RNSendBirdCalls,
-  SendBirdCalls
+  SendBirdCalls,
+  SendBirdCallsVideo
 }

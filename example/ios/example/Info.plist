@@ -53,7 +53,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+  <key>NSCameraUsageDescription</key>
+  <string>Enable camera access so that others can see you during video calls.</string>
   <key>NSMicrophoneUsageDescription</key>
-  <string>For voice call</string>
+  <string>Enable microphone access so that others can hear you.</string>
 </dict>
 </plist>

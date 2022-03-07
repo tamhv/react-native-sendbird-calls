@@ -8,81 +8,147 @@
  * https://github.com/facebook/react-native
  */
 
-import React, { Component } from 'react'
-import { Platform,Button, StyleSheet, Text, View } from 'react-native'
+import React, {Component} from 'react';
+import {Platform, Button, StyleSheet, Text, View} from 'react-native';
 
-import {SendBirdCalls} from 'react-native-sendbird-calls'
+import {SendBirdCalls, SendBirdCallsVideo} from 'react-native-sendbird-calls';
+
 export default class App extends Component<{}> {
+  state = {};
 
-  state = {}
-
-  constructor(props){
-    super(props)
+  constructor(props) {
+    super(props);
     //1
-    SendBirdCalls.setup('10A8BD3E-3A52-4BC4-B3A7-EA3C2375D599')
+    SendBirdCalls.setup('10A8BD3E-3A52-4BC4-B3A7-EA3C2375D599');
   }
 
-  componentDidMount () {
+  componentDidMount() {
     //2
-    SendBirdCalls.addEventListener('DirectCallDidConnect', this.onDirectCallDidConnect)
-    SendBirdCalls.addEventListener('DirectCallDidEnd', this.onDirectCallDidEnd)
-    const caller  = '1111'
+    SendBirdCalls.addEventListener(
+      'DirectCallDidConnect',
+      this.onDirectCallDidConnect,
+    );
+    SendBirdCalls.addEventListener('DirectCallDidEnd', this.onDirectCallDidEnd);
+    const caller = '1111';
     //3
-    SendBirdCalls.authenticate(caller)
+    SendBirdCalls.authenticate(caller);
     //4
-    SendBirdCalls.setupVoIP()
-
-  }
-  componentWillUnmount () {
-    SendBirdCalls.removeAllEventListeners()
+    SendBirdCalls.setupVoIP();
   }
 
-  onDirectCallDidConnect = (data) =>{
-    console.log('onDirectCallDidConnect', data)
-    const {callId} = data
-    this.setState({connected:true, calling:true, callId})
+  componentWillUnmount() {
+    SendBirdCalls.removeAllEventListeners();
   }
 
-  onDirectCallDidEnd = (data) =>{
-    console.log('onDirectCallDidEnd', data)
-    this.setState({calling:false, callId:null, connected: false})
-  }
+  onDirectCallDidConnect = data => {
+    console.log('onDirectCallDidConnect', data);
+    const {callId} = data;
+    this.setState({connected: true, calling: true, callId});
+  };
 
-  call = async () => {
-    const callee = '123'
+  onDirectCallDidEnd = data => {
+    console.log('onDirectCallDidEnd', data);
+    this.setState({calling: false, callId: null, connected: false});
+  };
+
+  call = async (callee, isVideoCall) => {
     //5
-    const data = await SendBirdCalls.dial(callee);
-    const {callId} = data
-    this.setState({calling:true, callId})
-  }
+    const data = await SendBirdCalls.dial(callee, isVideoCall);
+    const {callId} = data;
+    this.setState({calling: true, isVideoCall, callId});
+  };
 
   endCall = async () => {
-    const {callId} = this.state
+    const {callId} = this.state;
     //6
     const data = await SendBirdCalls.endCall(callId);
-    console.log('endcall', data)
-    this.setState({calling:false, callId: null, connected:false})
-  }
+    console.log('endcall', data);
+    this.setState({calling: false, callId: null, connected: false});
+  };
 
-  render () {
-    const {calling, connected} = this.state
+  render() {
+    const {calling, connected, callId, isVideoCall} = this.state;
     return (
       <View style={styles.container}>
-        <Text>Current userId: 1111</Text>
         {calling ? (
-          <View>
-            {connected ? <View>
-              <Text>Connected (00:01...)</Text>
-            </View>:(<View>
-              <Text>Calling...</Text>
-            </View>)}
-            <Button title={'End call'} onPress={this.endCall}/>
+          <View style={styles.container}>
+            {connected ? (
+              <View>
+                {callId && isVideoCall ? (
+                  <SendBirdCallsVideo
+                    callId={callId}
+                    local={false}
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <SendBirdCallsVideo
+                      callId={callId}
+                      local={true}
+                      style={{flex: 1, width: 100, height: 100}}
+                    />
+                    <View
+                      style={{
+                        flex: 2,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      <Text>Connected (00:01...)</Text>
+                      <Button title={'End call'} onPress={this.endCall} />
+                    </View>
+                  </SendBirdCallsVideo>
+                ) : (
+                  <View>
+                    <Text>Connected (00:01...)</Text>
+                    <Button title={'End call'} onPress={this.endCall} />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.container}>
+                {callId && isVideoCall ? (
+                  <View style={styles.container}>
+                    <SendBirdCallsVideo
+                      callId={callId}
+                      local={true}
+                      style={{flex: 1}}>
+                      <View
+                        style={{
+                          flex: 1,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                        <Text>Calling...</Text>
+                        <Button title={'End call'} onPress={this.endCall} />
+                      </View>
+                    </SendBirdCallsVideo>
+                  </View>
+                ) : (
+                  <View style={styles.container}>
+                    <Text>Calling...</Text>
+                    <Button title={'End call'} onPress={this.endCall} />
+                  </View>
+                )}
+              </View>
+            )}
           </View>
-        ):(
-          <Button title={'Call userId=123'} onPress={this.call}/>
+        ) : (
+          <View style={styles.container}>
+            <Text>Current userId: 1111</Text>
+
+            <Button
+              title={'Voice call to userId=123'}
+              onPress={() => this.call('123', false)}
+            />
+            <Button
+              title={'Video call to userId=123'}
+              onPress={() => this.call('123', true)}
+            />
+          </View>
         )}
       </View>
-    )
+    );
   }
 }
 
@@ -103,4 +169,5 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 5,
   },
-})
+  calling: {},
+});

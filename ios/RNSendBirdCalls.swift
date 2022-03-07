@@ -56,22 +56,24 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
 //         print(self)
 //     }
 
-    @objc func dial(_ calleeId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock){
-        let params = DialParams(calleeId: calleeId, callOptions: CallOptions())
+    @objc func dial(_ calleeId: String, isVideoCall: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock){
+
+        let callOptions = CallOptions(isAudioEnabled: true, isVideoEnabled: true, useFrontCamera: true)
+        let params = DialParams(calleeId: calleeId, isVideoCall: isVideoCall, callOptions: callOptions)
 
         let directCall = SendBirdCall.dial(with: params) { call, error in
-            
+
             guard let call = call, error == nil else {
                 reject("error_dial","Dial failed", nil)
                 return
             }
+
             // The call has been created successfully
             resolve(["callId": call.callId])
         }
 
         directCall?.delegate = self
 
-//        UIApplication.shared.showCallController(with: directCall!)
     }
 
     @objc func endCall(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
@@ -81,7 +83,12 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         }
         call.end()
         CXCallManager.shared.endCXCall(call)
-        resolve(["callId": callId, "caller":call.caller?.userId,"callee":call.callee?.userId])
+        resolve([
+            "callId": callId,
+            "caller": call.caller?.userId as Any,
+            "callee": call.callee?.userId as Any,
+            "duration": call.duration as Any
+        ])
     }
 
     @objc func voipRegistration() {
@@ -177,7 +184,8 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         let params = [
             "callId": call.callId as Any,
             "callee": call.callee?.userId as Any,
-            "caller": call.caller?.userId as Any
+            "caller": call.caller?.userId as Any,
+            "duration": call.duration as Any
         ] as [String : Any]
         self.sendEvent(withName: RNSendBirdCalls.DirectCallDidEnd, body: params)
        CXCallManager.shared.endCall(for: callId, endedAt: Date(), reason: call.endResult)

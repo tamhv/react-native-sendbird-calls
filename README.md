@@ -5,8 +5,13 @@
 
 - [x] ios
    - [x] configure appId
+   - [x] configure voIP
+   - [ ] configure remote push notification
    - [x] authenticate
    - [x] voice call
+   - [x] video call
+   - [ ] on/off audio
+   - [ ] on/off video
 - [ ] android
 
 ## Getting started
@@ -17,12 +22,13 @@
 ```javascript
 import {SendBirdCalls} from 'react-native-sendbird-calls';
 
-SendBirdCalls.setup
-SendBirdCalls.addEventListener
-SendBirdCalls.authenticate
-SendBirdCalls.setupVoIP
-SendBirdCalls.dial
-SendBirdCalls.endCall
+SendBirdCalls.setup(appId)
+SendBirdCalls.addEventListener(event, handler)
+SendBirdCalls.authenticate(userId)
+SendBirdCalls.setupVoIP()
+SendBirdCalls.dial(callee, isVideoCall)
+SendBirdCalls.endCall(callId)
+SendBirdCalls.removeAllEventListeners())
 
 ```
 
