@@ -40,3 +40,4 @@ local.properties
 buck-out/
 \.buckd/
 *.keystore
+example/android/app/google-services.json

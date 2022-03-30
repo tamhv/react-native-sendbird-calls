@@ -1,14 +1,16 @@
 {
   "name": "react-native-sendbird-calls",
   "title": "React Native Sendbird Calls",
-  "version": "1.0.0-beta1",
+  "version": "1.0.0-beta6",
   "description": "TODO",
   "main": "index.js",
   "files": [
     "README.md",
-    "android",
+    "android/src",
+    "android/build.gradle",
     "index.js",
     "ios",
+    "src",
     "react-native-sendbird-calls.podspec"
   ],
   "scripts": {

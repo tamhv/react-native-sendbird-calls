@@ -37,15 +37,16 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         SendBirdCall.authenticate(with: params) { (user, error) in
             guard let user = user, error == nil else {
                 // Handle error.
-                reject("auth_error","error",nil)
+                let code = "\(error?.errorCode.rawValue ?? 0)"
+                let message = error?.localizedDescription
+                reject(code,message, nil)
+           
                 return
             }
 
-            print(user)
-
             // The user has been authenticated successfully and is connected to Sendbird server.
             // Register device token by using the `SendBirdCall.registerVoIPPush` or `SendBirdCall.registerRemotePush` methods.
-            resolve(true)
+            resolve(["userId": user.userId, "nickname": user.nickname])
         }
     }
 
@@ -57,12 +58,15 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         let directCall = SendBirdCall.dial(with: params) { call, error in
 
             guard let call = call, error == nil else {
-                reject("error_dial","Dial failed", nil)
+                
+                let code = "\(error?.errorCode.rawValue ?? 0)"
+                let message = error?.localizedDescription
+                reject(code,message, nil)
                 return
             }
 
             // The call has been created successfully
-            resolve(["callId": call.callId])
+            resolve(["callId": call.callId, "caller": call.caller?.userId, "callee": call.callee?.userId])
         }
 
         directCall?.delegate = self
@@ -71,7 +75,7 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
 
     @objc func endCall(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         guard let call = SendBirdCall.getCall(forCallId: callId) else {
-            reject("error_get_call","Call not found",nil)
+            reject("0","Call not found",nil)
             return
         }
         call.end()
@@ -162,7 +166,8 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         let params = [
             "callId": call.callId as Any,
             "callee": call.callee?.userId as Any,
-            "caller": call.caller?.userId as Any
+            "caller": call.caller?.userId as Any,
+            "isVideoCall": call.isVideoCall as Any
         ] as [String : Any]
         self.sendEvent(withName: RNSendBirdCalls.DirectCallDidConnect, body:params)
     }

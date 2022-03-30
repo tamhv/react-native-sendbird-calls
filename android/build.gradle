@@ -36,7 +36,7 @@ buildscript {
         dependencies {
             // This should reflect the Gradle plugin version used by
             // the minimum React Native version supported.
-            classpath 'com.android.tools.build:gradle:3.4.1'
+            classpath 'com.android.tools.build:gradle:4.2.1'
         }
     }
 }
@@ -72,6 +72,7 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
+    implementation 'com.sendbird.sdk:sendbird-calls:1.9.0'
 }
 
 def configureReactNativePom(def pom) {

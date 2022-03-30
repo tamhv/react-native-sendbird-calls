@@ -10,6 +10,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@notifee/react-native": "^3.0.4",
+    "@react-native-async-storage/async-storage": "^1.17.0",
+    "@react-native-firebase/app": "^14.5.1",
+    "@react-native-firebase/messaging": "^14.5.1",
     "react": "17.0.2",
     "react-native": "0.65.2",
     "react-native-sendbird-calls": "link:../"

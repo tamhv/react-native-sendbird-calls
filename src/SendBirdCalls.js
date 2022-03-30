@@ -10,23 +10,21 @@ class SendBirdCalls {
   }
 
   setup = async (appId) => {
-    try {
       return await RNSendBirdCalls.configure(appId)
-    } catch (e) {
-      console.log('Error setup', e)
-    }
   }
 
   authenticate = async (userId) => {
-    try {
       return await RNSendBirdCalls.authenticate(userId, '')
-    } catch (e) {
-      console.log('Error authenticate', e)
-    }
   }
 
   setupVoIP = async () => {
-    RNSendBirdCalls.voipRegistration()
+    if (isIOS){
+      return await RNSendBirdCalls.voipRegistration()
+    }
+  }
+
+  registerPushToken = async (token) =>{
+    return await RNSendBirdCalls.registerPushToken(token)
   }
 
   dial = async (callee, isVideoCall) => {
@@ -35,6 +33,10 @@ class SendBirdCalls {
 
   endCall = async (callId) => {
     return await RNSendBirdCalls.endCall(callId)
+  }
+
+  acceptCall = async (callId) => {
+    return await RNSendBirdCalls.acceptCall(callId)
   }
 
   addEventListener = (event, handler) => {
