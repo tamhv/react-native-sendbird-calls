@@ -1,4 +1,4 @@
-package com.example;
+package com.testsendbirdcall;
 
 import com.facebook.react.ReactActivity;
 

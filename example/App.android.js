@@ -21,18 +21,15 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  RNSendBirdCalls,
-  SendBirdCalls,
-  SendBirdCallsVideo,
-} from 'react-native-sendbird-calls';
+import {SendBirdCalls, SendBirdCallsVideo} from 'react-native-sendbird-calls';
 import messaging from '@react-native-firebase/messaging';
 import notifee, {
   AndroidImportance,
   EventType,
   AndroidCategory,
 } from '@notifee/react-native';
-const APP_ID = '';
+
+const APP_ID = '8905DE33-949A-4F12-A2CB-99A68365407B';
 // Register background handler
 messaging().setBackgroundMessageHandler(handleIncomingSendBirdCall);
 notifee.onBackgroundEvent(notifeeBackgroundEventHandler);
@@ -132,6 +129,7 @@ async function notifeeBackgroundEventHandler({type, detail}) {
     }
   }
 }
+
 async function notifeeForegroundEventHandler({type, detail}) {
   if (type === EventType.ACTION_PRESS) {
     const {
@@ -194,10 +192,8 @@ export default class App extends Component {
       this.setState({caller: caller});
 
       await this.signIn(caller);
-
     }
     this.setState({loading: false});
-
   };
 
   setupSendBirdApp = async () => {
@@ -245,8 +241,18 @@ export default class App extends Component {
       } catch (e) {}
     }
   };
+
   async componentDidMount() {
     await this.setupSendBirdApp();
+    SendBirdCalls.addEventListener(
+      'SendBirdCallRinging',
+      this.onSendBirdCallRinging,
+    );
+
+    SendBirdCalls.addEventListener(
+      'DirectCallDidAccept',
+      this.onDirectCallDidAccept,
+    );
 
     SendBirdCalls.addEventListener(
       'DirectCallDidConnect',
@@ -255,7 +261,7 @@ export default class App extends Component {
     SendBirdCalls.addEventListener('DirectCallDidEnd', this.onDirectCallDidEnd);
 
     await this.getUserIdIfAny();
-
+    console.log('componentDidMount');
   }
 
   componentWillUnmount() {
@@ -263,15 +269,35 @@ export default class App extends Component {
     this.unsubscribeNotifee && this.unsubscribeNotifee();
   }
 
+  onSendBirdCallRinging = data => {
+    console.log('onSendBirdCallRinging', data);
+    const {callId, isVideoCall, caller} = data;
+    this.setState({ringing: true, remoteUserId: caller, callId, isVideoCall});
+  };
+
+  onDirectCallDidAccept = data => {
+    console.log('onDirectCallDidAccept', data);
+  };
   onDirectCallDidConnect = data => {
     console.log('onDirectCallDidConnect', data);
     const {callId, isVideoCall} = data;
-    this.setState({connected: true, calling: true, callId, isVideoCall});
+    this.setState({
+      connected: true,
+      ringing: false,
+      calling: true,
+      callId,
+      isVideoCall,
+    });
   };
 
   onDirectCallDidEnd = data => {
     console.log('onDirectCallDidEnd', data);
-    this.setState({calling: false, callId: null, connected: false});
+    this.setState({
+      calling: false,
+      ringing: false,
+      callId: null,
+      connected: false,
+    });
   };
 
   call = async (callee, isVideoCall) => {
@@ -310,7 +336,6 @@ export default class App extends Component {
       this.setState({loading: false});
       console.log('SendBirdCalls.authenticate', result);
 
-
       await requestCameraPermission();
       const token = await messaging().getToken();
       console.log('fcm', token);
@@ -320,13 +345,11 @@ export default class App extends Component {
       );
       messaging().onMessage(handleIncomingSendBirdCall);
 
-
       const initialNotification = await notifee.getInitialNotification();
 
       if (initialNotification) {
         await this.appHasBeenOpenedWithNotifeeNotification(initialNotification);
       }
-
     } catch (e) {
       this.setState({loading: false});
 
@@ -339,7 +362,19 @@ export default class App extends Component {
     await AsyncStorage.removeItem('@caller');
     this.setState({caller: null, authenticated: false});
   };
+  accept = async () => {
+    const {callId} = this.state;
+    notifee.cancelNotification(callId);
+    const data = await SendBirdCalls.acceptCall(callId);
+    this.setState({ringing: false});
+  };
 
+  decline = async () => {
+    const {callId} = this.state;
+    notifee.cancelNotification(callId);
+    const data = await SendBirdCalls.endCall(callId);
+    this.setState({ringing: false, callId: null});
+  };
   render() {
     const {
       calling,
@@ -349,6 +384,8 @@ export default class App extends Component {
       authenticated,
       caller,
       loading,
+      ringing,
+      remoteUserId,
     } = this.state;
 
     if (loading) {
@@ -361,6 +398,22 @@ export default class App extends Component {
 
     if (!authenticated) {
       return <NotAuthenticated onSubmitUserId={this.signIn} />;
+    }
+
+    if (ringing) {
+      return (
+        <View style={styles.container}>
+          <Text>
+            {remoteUserId} is calling (video={`${isVideoCall}`})
+          </Text>
+          <View style={{flexDirection: 'row'}}>
+            <View style={styles.fixToText}>
+              <Button title="Accept" color="blue" onPress={this.accept} />
+              <Button title="Decline" color="blue" onPress={this.decline} />
+            </View>
+          </View>
+        </View>
+      );
     }
 
     return (
@@ -488,6 +541,7 @@ class NotAuthenticated extends React.Component {
       onSubmitUserId && onSubmitUserId(userId);
     }
   };
+
   render() {
     const {userId} = this.state;
     return (
@@ -514,6 +568,7 @@ class CallUI extends React.Component {
   onChangeText = text => {
     this.setState({userId: text});
   };
+
   render() {
     const {caller, onCall, onLogout} = this.props;
     const {userId} = this.state;

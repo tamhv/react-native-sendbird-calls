@@ -1,4 +1,4 @@
-package com.example;
+package com.testsendbirdcall;
 
 import androidx.annotation.NonNull;
 import android.content.Context;

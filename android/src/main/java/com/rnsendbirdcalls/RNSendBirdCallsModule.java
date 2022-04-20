@@ -52,17 +52,24 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void configure(String appId, Promise promise) {
         if (SendBirdCall.init(getReactApplicationContext(), appId)) {
+            SendBirdCall.removeAllListeners();
             SendBirdCall.addListener(UUID.randomUUID().toString(), new SendBirdCallListener() {
                 @Override
                 public void onRinging(@NotNull DirectCall directCall) {
                     Log.i(getName(), "onRinging");
                     setListener(directCall);
+                    WritableMap params = Arguments.createMap();
+                    params.putString("callId", directCall.getCallId());
+                    params.putString("caller", directCall.getCaller().getUserId());
+                    params.putString("callee", directCall.getCallee().getUserId());
+                    params.putBoolean("isVideoCall", directCall.isVideoCall());
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("SendBirdCallRinging", params);
                 }
             });
             promise.resolve(true);
 
         } else {
-            promise.reject("'init'", "Init failed");
+            promise.reject("0", "Init failed");
         }
     }
 
@@ -150,12 +157,18 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void setListener(DirectCall directCall) {
-        directCall.setListener(new DirectCallListener() {
+    private void setListener(DirectCall call) {
+        call.setListener(new DirectCallListener() {
             @Override
-            public void onEstablished(@NotNull DirectCall call) {
+            public void onEstablished(@NotNull DirectCall directCall) {
                 //Remote user accepted the call.
                 Log.i(getName(), "onEstablished");
+                WritableMap params = Arguments.createMap();
+                params.putString("callId", directCall.getCallId());
+                params.putString("caller", directCall.getCaller().getUserId());
+                params.putString("callee", directCall.getCallee().getUserId());
+                params.putBoolean("isVideoCall", directCall.isVideoCall());
+                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallDidAccept", params);
             }
 
             @Override
