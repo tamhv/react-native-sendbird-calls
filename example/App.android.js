@@ -200,6 +200,14 @@ export default class App extends Component {
     try {
       await SendBirdCalls.setup(APP_ID);
       console.log('SendBirdCalls.setup');
+      await SendBirdCalls.addDirectCallSound(
+        SendBirdCalls.soundType.DIALING,
+        'dialing',
+      );
+      await SendBirdCalls.addDirectCallSound(
+        SendBirdCalls.soundType.RINGING,
+        'ringing',
+      );
     } catch (e) {
       console.log(e.code, e.message);
     }
@@ -425,7 +433,8 @@ export default class App extends Component {
                 {callId && isVideoCall ? (
                   <View style={styles.container}>
                     <SendBirdCallsVideo
-                      call={{callId: callId, local: false}}
+                      callId={callId}
+                      local={false}
                       style={{
                         flex: 1,
                         width: Dimensions.get('window').width,
@@ -433,7 +442,8 @@ export default class App extends Component {
                       }}
                     />
                     <SendBirdCallsVideo
-                      call={{callId: callId, local: true}}
+                      callId={callId}
+                      local={true}
                       style={{
                         position: 'absolute',
                         top: 10,
@@ -463,7 +473,8 @@ export default class App extends Component {
                 {callId && isVideoCall ? (
                   <View style={styles.container}>
                     <SendBirdCallsVideo
-                      call={{callId: callId, local: true}}
+                      callId={callId}
+                      local={true}
                       style={{
                         flex: 1,
                         width: Dimensions.get('window').width,
