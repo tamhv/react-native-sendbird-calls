@@ -7,7 +7,9 @@ class SendBirdCalls {
 
   soundType = {
     DIALING: 'DIALING',
-    RINGING:'RINGING'
+    RINGING:'RINGING',
+    RECONNECTING:'RECONNECTING',
+    RECONNECTED:'RECONNECTED',
   }
 
 
@@ -47,9 +49,7 @@ class SendBirdCalls {
   }
 
   addDirectCallSound = async (soundType, filename) => {
-    if(isAndroid){
       return await RNSendBirdCalls.addDirectCallSound(soundType,filename)
-    }
   }
 
   removeDirectCallSound = async (soundType) => {
@@ -61,6 +61,8 @@ class SendBirdCalls {
   setDirectCallDialingSoundOnWhenSilentOrVibrateMode = async (b) => {
     if(isAndroid) {
       return await RNSendBirdCalls.setDirectCallDialingSoundOnWhenSilentOrVibrateMode(b)
+    }else if(isIOS){
+      return await RNSendBirdCalls.setDirectCallDialingSoundOnWhenSilentMode(b)
     }
   }
 

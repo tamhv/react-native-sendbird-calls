@@ -93,6 +93,23 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         self.voipRegistry?.delegate = self
         self.voipRegistry?.desiredPushTypes = [.voIP]
     }
+    
+    @objc func addDirectCallSound(_ soundType: String, filename: String) {
+        if(soundType == "DIALING"){
+            SendBirdCall.addDirectCallSound(filename, forType: .dialing)
+        }else if(soundType == "RINGING"){
+            SendBirdCall.addDirectCallSound(filename, forType: .ringing)
+        }else if(soundType == "RECONNECTING"){
+            SendBirdCall.addDirectCallSound(filename, forType: .reconnecting)
+        }else if(soundType == "RECONNECTED"){
+            SendBirdCall.addDirectCallSound(filename, forType: .reconnected)
+        }
+        
+    }
+    
+    @objc func setDirectCallDialingSoundOnWhenSilentMode(_ isEnabled: Bool) {
+        SendBirdCall.setDirectCallDialingSoundOnWhenSilentMode(isEnabled: isEnabled)
+    }
 
     // MARK: - SendBirdCalls - Registering push token.
     func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {

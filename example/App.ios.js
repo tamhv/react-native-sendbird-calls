@@ -21,7 +21,7 @@ import {
 
 import {SendBirdCalls, SendBirdCallsVideo} from 'react-native-sendbird-calls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const APP_ID = '';
+const APP_ID = '420C9A17-445C-4151-89C8-CFF29D8E403F';
 export default class App extends Component<{}> {
   state = {
     loading: true,
@@ -31,6 +31,14 @@ export default class App extends Component<{}> {
     try {
       await SendBirdCalls.setup(APP_ID);
       console.log('SendBirdCalls.setup');
+      await SendBirdCalls.addDirectCallSound(
+        SendBirdCalls.soundType.DIALING,
+        'dialing',
+      );
+      await SendBirdCalls.addDirectCallSound(
+        SendBirdCalls.soundType.RINGING,
+        'ringing',
+      );
     } catch (e) {
       console.log(e.code, e.message);
     }
