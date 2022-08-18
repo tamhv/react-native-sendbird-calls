@@ -66,7 +66,7 @@ export interface ISendbirdCalls {
       *
       * @param eventName
       */
-     addEventListener(eventName: string, handler: (callData: ICallResponse) => ICallResponse): void;
+     addEventListener(eventName: string, handler: (callData: ICallResponse) => void): void;
  
      removeAllEventListeners(): void;
 

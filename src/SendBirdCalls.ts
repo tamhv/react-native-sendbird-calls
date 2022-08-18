@@ -6,6 +6,8 @@ const { RNSendBirdCalls } = NativeModules
 const isIOS = Platform.OS === 'ios'
 const isAndroid = Platform.OS === 'android'
 
+export type SendbirdCallsProps = ISendbirdCalls;
+export type CallResponse = ICallResponse;
 
 class SendBirdCalls implements ISendbirdCalls {
   private _eventHandlers: Map<any, any>;
@@ -49,10 +51,16 @@ class SendBirdCalls implements ISendbirdCalls {
   }
 
   unregisterPushToken = async (token: string): Promise<boolean> => {
+    if (isIOS) {
+      return false;
+    }
     return await RNSendBirdCalls.unregisterPushToken(token)
   }
 
   unregisterAllPushTokens = async (): Promise<boolean> => {
+    if (isIOS) {
+      return false;
+    }
     return await RNSendBirdCalls.unregisterAllPushTokens()
   }
 
@@ -88,7 +96,7 @@ class SendBirdCalls implements ISendbirdCalls {
     return false;
   }
 
-  addEventListener = (event: string, handler: (callData: ICallResponse) => ICallResponse): void => {
+  addEventListener = (event: string, handler: (callData: ICallResponse) => void): void => {
     const subscription = this._eventEmitter.addListener(event, handler)
     this._eventHandlers.set(event, subscription)
   }
@@ -101,11 +109,15 @@ class SendBirdCalls implements ISendbirdCalls {
   }
 
   setCallConnectionTimeout(second: number): void {
-    RNSendBirdCalls.setCallConnectionTimeout(second);
+    if (isAndroid) {
+      RNSendBirdCalls.setCallConnectionTimeout(second);
+    }
   }
 
   setRingingTimeout(second: number): void {
-    RNSendBirdCalls.setRingingTimeout(second);
+    if (isAndroid) {
+      RNSendBirdCalls.setRingingTimeout(second);
+    }
   }
 
 }
