@@ -167,6 +167,34 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+    public void unregisterPushToken(String token, Promise promise) {
+        if (SendBirdCall.getCurrentUser() != null) {
+            SendBirdCall.unregisterPushToken(token, e -> {
+                if (e != null) {
+                    Log.i("RNSendBirdCalls", "unregisterPushToken => e: " + e.getMessage());
+                    promise.reject("unregisterPushToken", e.getMessage(), e);
+                } else {
+                    promise.resolve(true);
+                }
+            });
+        }
+    }
+
+    @ReactMethod
+    public void unregisterAllPushTokens(Promise promise) {
+        if (SendBirdCall.getCurrentUser() != null) {
+            SendBirdCall.unregisterAllPushTokens(e -> {
+                if (e != null) {
+                    Log.i("RNSendBirdCalls", "unregisterAllPushTokens => e: " + e.getMessage());
+                    promise.reject("unregisterAllPushTokens", e.getMessage(), e);
+                } else {
+                    promise.resolve(true);
+                }
+            });
+        }
+    }
+
 
     @ReactMethod
     public void dial(String callee, boolean isVideoCall, Promise promise) {
@@ -219,6 +247,16 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
         } else {
             promise.reject("0", "Call not found");
         }
+    }
+
+    @ReactMethod
+    public void setCallConnectionTimeout(int s) {
+        SendBirdCall.Options.setCallConnectionTimeout(s);
+    }
+
+    @ReactMethod
+    public void setRingingTimeout(int s) {
+        SendBirdCall.Options.setRingingTimeout(s);
     }
 
     private void setListener(DirectCall call) {
