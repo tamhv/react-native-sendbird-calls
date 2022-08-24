@@ -1,11 +1,12 @@
 import React from 'react'
-import { requireNativeComponent } from 'react-native'
+import { Platform, requireNativeComponent, StyleProp, ViewStyle } from 'react-native'
 const RNVSendBirdCallsVideo = requireNativeComponent('RNVSendBirdCallsVideo')
 const isAndroid = Platform.OS === 'android'
 
 export interface SendBirdCallsVideoProps {
   callId: string;
-  local?: boolean
+  local?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 class SendBirdCallsVideo extends React.Component<SendBirdCallsVideoProps> {

@@ -108,6 +108,7 @@ export interface ICallResponse {
     callee: string;
     caller: string;
     duration?: number;
+    isVideoCall?: boolean;
 }
 
 export interface ISoundTypes {

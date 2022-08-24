@@ -261,7 +261,7 @@ PODS:
     - React-jsi (= 0.65.2)
     - React-perflogger (= 0.65.2)
   - React-jsinspector (0.65.2)
-  - react-native-sendbird-calls (1.0.0-beta6):
+  - react-native-sendbird-calls (1.0.0-beta7):
     - React
     - SendBirdCalls (~> 1.9.2)
     - SendBirdWebRTC (~> 1.4.0)
@@ -496,7 +496,7 @@ SPEC CHECKSUMS:
   React-jsi: 29873f0fc48b330fbdd159f09df6d88e69c0f7dd
   React-jsiexecutor: 0fe3300621eb92ce5ae573560a88d24eb8818392
   React-jsinspector: d6addf5799e8dbf9d27b3191810225f0276dfb2d
-  react-native-sendbird-calls: 6dfbc19eacb332c5780bee90db7489ccc44a51d1
+  react-native-sendbird-calls: dc6bab8415bafb6e0b2e3c2e75ac6a5d8f905b2d
   React-perflogger: 939564c838f8b6ec099b4f858559f0f406c99745
   React-RCTActionSheet: b5135d36ee35ebd883c4fe043db7bd8cbba7516e
   React-RCTAnimation: 93aeefce33bb73f8d82132d7a362819676e1d1e4
@@ -519,4 +519,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 38ca8a4107227456e2ca36e7eb1cd86744fc424f
 
-COCOAPODS: 1.10.2
+COCOAPODS: 1.11.3
