@@ -4,6 +4,8 @@ package com.rnsendbirdcalls;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -34,6 +36,7 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
         this.reactContext = reactContext;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return "RNSendBirdCalls";
@@ -56,6 +59,11 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
             SendBirdCall.addListener(UUID.randomUUID().toString(), new SendBirdCallListener() {
                 @Override
                 public void onRinging(@NotNull DirectCall directCall) {
+                    int onGoingCallCount = SendBirdCall.getOngoingCallCount();
+                    if (onGoingCallCount >= 2) {
+                        directCall.end();
+                        return;
+                    }
                     Log.i(getName(), "onRinging");
                     setListener(directCall);
                     WritableMap params = Arguments.createMap();
@@ -75,59 +83,75 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void addDirectCallSound(String soundType, String filename, Promise promise) {
-        if(soundType.equals("DIALING")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.DIALING, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+        switch (soundType) {
+            case "DIALING": {
+                int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.DIALING, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else if(soundType.equals("RINGING")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RINGING, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+            case "RINGING": {
+                int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RINGING, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else if(soundType.equals("RECONNECTED")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTED, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+            case "RECONNECTED": {
+                int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTED, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else if(soundType.equals("RECONNECTING")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTING, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+            case "RECONNECTING": {
+                int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTING, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else{
-            promise.reject("0", "Sound type not found");
+            default:
+                promise.reject("0", "Sound type not found");
+                break;
         }
     }
 
     @ReactMethod
     public void removeDirectCallSound(String soundType, Promise promise) {
-        if(soundType.equals("DIALING")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.DIALING);
-            promise.resolve(true);
-        }else if(soundType.equals("RINGING")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RINGING);
-            promise.resolve(true);
-        }else if(soundType.equals("RECONNECTED")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTED);
-            promise.resolve(true);
-        }else if(soundType.equals("RECONNECTING")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTING);
-            promise.resolve(true);
-        }else{
-            promise.reject("0", "Sound type not found");
+        switch (soundType) {
+            case "DIALING":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.DIALING);
+                promise.resolve(true);
+                break;
+            case "RINGING":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RINGING);
+                promise.resolve(true);
+                break;
+            case "RECONNECTED":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTED);
+                promise.resolve(true);
+                break;
+            case "RECONNECTING":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTING);
+                promise.resolve(true);
+                break;
+            default:
+                promise.reject("0", "Sound type not found");
+                break;
         }
     }
 
