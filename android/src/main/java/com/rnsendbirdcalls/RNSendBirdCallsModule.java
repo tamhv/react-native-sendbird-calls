@@ -3,6 +3,9 @@
 package com.rnsendbirdcalls;
 
 import android.content.Context;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -34,11 +37,13 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
 
     private final Context context;
     private final ReactApplicationContext reactContext;
+    private final Vibrator vibrator;
 
     public RNSendBirdCallsModule(ReactApplicationContext reactApplicationContext) {
         super(reactApplicationContext);
         this.context = reactApplicationContext.getApplicationContext();
         this.reactContext = reactApplicationContext;
+        this.vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @NonNull
@@ -59,12 +64,32 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void configure(String appId, Promise promise) {
+        long[] vibratePattern = {100, 300, 500, 300, 500, 300};
+        int repeat = 0;
         if (SendBirdCall.init(context, appId)) {
             SendBirdCall.removeAllListeners();
             SendBirdCall.addListener(UUID.randomUUID().toString(), new SendBirdCallListener() {
                 @Override
                 public void onRinging(@NotNull DirectCall directCall) {
                     Log.i(getName(), "onRinging");
+                    int ongoingCallCount = SendBirdCall.getOngoingCallCount();
+                    if (ongoingCallCount >= 2) {
+                        vibrator.cancel();
+                        directCall.end();
+                        return;
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(
+                                VibrationEffect.createWaveform(
+                                        vibratePattern,
+                                        repeat
+                                )
+                        );
+                    } else {
+                        vibrator.vibrate(vibratePattern, repeat);
+                    }
+
                     directCall.unmuteMicrophone();
                     setListener(directCall);
                     WritableMap params = createCallParams(directCall);
@@ -260,6 +285,7 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
     public void acceptCall(String callId, Promise promise) {
         DirectCall directCall = SendBirdCall.getCall(callId);
         if (directCall != null) {
+            directCall.unmuteMicrophone();
             AcceptParams acceptParams = new AcceptParams();
             directCall.accept(acceptParams);
             promise.resolve(true);
@@ -364,6 +390,7 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
             @Override
             public void onConnected(@NotNull DirectCall directCall) {
                 Log.i(getName(), "onConnected");
+                vibrator.cancel();
                 WritableMap params = createCallParams(directCall);
                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallDidConnect", params);
             }
@@ -371,6 +398,7 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
             @Override
             public void onEnded(@NotNull DirectCall directCall) {
                 Log.i(getName(), "onEnded");
+                vibrator.cancel();
                 WritableMap params = createCallParams(directCall);
                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallDidEnd", params);
             }

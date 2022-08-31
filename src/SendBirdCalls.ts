@@ -131,19 +131,19 @@ class SendBirdCalls implements ISendbirdCalls {
   }
 
   stopVideo = async (callId: string): Promise<boolean> => {
-    return await RNSendBirdCalls.switchCamera(callId);
+    return await RNSendBirdCalls.stopVideo(callId);
   }
 
   startVideo = async (callId: string): Promise<boolean> => {
-    return await RNSendBirdCalls.switchCamera(callId);
+    return await RNSendBirdCalls.startVideo(callId);
   }
 
   muteMicrophone = async (callId: string): Promise<boolean> => {
-    return await RNSendBirdCalls.switchCamera(callId);
+    return await RNSendBirdCalls.muteMicrophone(callId);
   }
 
   unmuteMicrophone = async (callId: string): Promise<boolean> => {
-    return await RNSendBirdCalls.switchCamera(callId);
+    return await RNSendBirdCalls.unmuteMicrophone(callId);
   }
 
 }

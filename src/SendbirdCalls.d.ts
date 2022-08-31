@@ -169,6 +169,8 @@ export interface IEventTypes {
     ACCEPTED: string;
     CONNECTED: string;
     ENDED: string;
+    REMOTE_AUDIO_CHANGED: string;
+    REMOTE_VIDEO_CHANGED: string;
 }
 
 export interface IUserResponse {
