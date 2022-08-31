@@ -25,6 +25,8 @@ class SendBirdCalls implements ISendbirdCalls {
     ACCEPTED: 'DirectCallDidAccept',
     CONNECTED: 'DirectCallDidConnect',
     ENDED: 'DirectCallDidEnd',
+    REMOTE_AUDIO_CHANGED: "DirectCallRemoteAudioSettingsChanged",
+    REMOTE_VIDEO_CHANGED: "DirectCallVideoSettingsChanged",
   };
 
   constructor () {
@@ -118,6 +120,30 @@ class SendBirdCalls implements ISendbirdCalls {
     if (isAndroid) {
       RNSendBirdCalls.setRingingTimeout(second);
     }
+  }
+
+  handleFirebaseMessageData = async (data: any): Promise<boolean> => {
+    return await RNSendBirdCalls.handleFirebaseMessageData(data);
+  }
+
+  switchCamera = async (callId: string): Promise<boolean> => {
+    return await RNSendBirdCalls.switchCamera(callId);
+  }
+
+  stopVideo = async (callId: string): Promise<boolean> => {
+    return await RNSendBirdCalls.switchCamera(callId);
+  }
+
+  startVideo = async (callId: string): Promise<boolean> => {
+    return await RNSendBirdCalls.switchCamera(callId);
+  }
+
+  muteMicrophone = async (callId: string): Promise<boolean> => {
+    return await RNSendBirdCalls.switchCamera(callId);
+  }
+
+  unmuteMicrophone = async (callId: string): Promise<boolean> => {
+    return await RNSendBirdCalls.switchCamera(callId);
   }
 
 }

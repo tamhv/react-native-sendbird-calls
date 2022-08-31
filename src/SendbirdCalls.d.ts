@@ -101,6 +101,48 @@ export interface ISendbirdCalls {
       * Note: iOS only
       */
      setupVoIP(): Promise<void>;
+
+     /**
+     * 
+     * @param data
+     * @throws {SendBirdError}
+     */
+     handleFirebaseMessageData(data: any): Promise<boolean>;
+
+    /**
+    * 
+    * @param callId
+    * @throws {SendBirdError}
+    */
+    switchCamera(callId: string): Promise<boolean>;
+
+     /**
+     * 
+     * @param callId
+     * @throws {SendBirdError}
+     */
+    stopVideo(callId: string): Promise<boolean>;
+
+    /**
+     * 
+     * @param callId
+     * @throws {SendBirdError}
+     */
+    startVideo(callId: string): Promise<boolean>;
+
+    /**
+     * 
+     * @param callId
+     * @throws {SendBirdError}
+     */
+    muteMicrophone(callId: string): Promise<boolean>;
+
+    /**
+    * 
+    * @param callId
+    * @throws {SendBirdError}
+    */
+    unmuteMicrophone(callId: string): Promise<boolean>;
 }
 
 export interface ICallResponse {
@@ -109,6 +151,10 @@ export interface ICallResponse {
     caller: string;
     duration?: number;
     isVideoCall?: boolean;
+    isLocalAudioEnabled?: boolean;
+    isLocalVideoEnabled?: boolean;
+    isRemoteAudioEnabled?: boolean;
+    isRemoteVideoEnabled?: boolean;
 }
 
 export interface ISoundTypes {
