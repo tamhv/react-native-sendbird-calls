@@ -13,6 +13,8 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
 
     static let DirectCallDidConnect = "DirectCallDidConnect"
     static let DirectCallDidEnd = "DirectCallDidEnd"
+    static let DirectCallRemoteAudioSettingsChanged = "DirectCallRemoteAudioSettingsChanged"
+    static let DirectCallVideoSettingsChanged = "DirectCallVideoSettingsChanged"
 
     override init() {
         super.init()
@@ -22,7 +24,9 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
     override func supportedEvents() -> [String]! {
         return [
             RNSendBirdCalls.DirectCallDidConnect,
-            RNSendBirdCalls.DirectCallDidEnd
+            RNSendBirdCalls.DirectCallDidEnd,
+            RNSendBirdCalls.DirectCallRemoteAudioSettingsChanged,
+            RNSendBirdCalls.DirectCallVideoSettingsChanged
         ]
       }
 
@@ -66,7 +70,8 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
             }
 
             // The call has been created successfully
-            resolve(["callId": call.callId, "caller": call.caller?.userId, "callee": call.callee?.userId])
+            let params = self.buildParams(call)
+            resolve(params)
         }
 
         directCall?.delegate = self
@@ -80,12 +85,8 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         }
         call.end()
         CXCallManager.shared.endCXCall(call)
-        resolve([
-            "callId": callId,
-            "caller": call.caller?.userId as Any,
-            "callee": call.callee?.userId as Any,
-            "duration": call.duration as Any
-        ])
+        let params = buildParams(call)
+        resolve(params)
     }
 
     @objc func voipRegistration() {
@@ -109,6 +110,66 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
     
     @objc func setDirectCallDialingSoundOnWhenSilentMode(_ isEnabled: Bool) {
         SendBirdCall.setDirectCallDialingSoundOnWhenSilentMode(isEnabled: isEnabled)
+    }
+    
+    @objc func setCallConnectionTimeout(_ second: Int) {
+        SendBirdCall.setCallConnectingTimeout(second)
+    }
+    
+    @objc func setRingingTimeout(_ second: Int) {
+        SendBirdCall.setRingingTimeout(second)
+    }
+    
+    @objc func switchCamera(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("0","Call not found",nil)
+            return
+        }
+        call.switchCamera() {error in
+            guard error == nil else {
+                let code = "\(error?.errorCode.rawValue ?? 0)"
+                let message = error?.localizedDescription
+                reject(code,message, nil)
+                return
+            }
+            resolve(true);
+        }
+    }
+    
+    @objc func stopVideo(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("0","Call not found",nil)
+            return
+        }
+        call.stopVideo()
+        resolve(true)
+    }
+    
+    @objc func startVideo(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("0","Call not found",nil)
+            return
+        }
+        call.startVideo()
+        resolve(true)
+    }
+    
+    @objc func muteMicrophone(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("0","Call not found",nil)
+            return
+        }
+        call.muteMicrophone()
+        resolve(true)
+    }
+    
+    @objc func unmuteMicrophone(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("0","Call not found",nil)
+            return
+        }
+        call.unmuteMicrophone()
+        resolve(true)
     }
 
     // MARK: - SendBirdCalls - Registering push token.
@@ -180,27 +241,18 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
     func didConnect(_ call: DirectCall) {
      print("RNSendBirdCalls:didConnect")
         //active timer call.duration
-        let params = [
-            "callId": call.callId as Any,
-            "callee": call.callee?.userId as Any,
-            "caller": call.caller?.userId as Any,
-            "isVideoCall": call.isVideoCall as Any
-        ] as [String : Any]
+        let params = buildParams(call)
         self.sendEvent(withName: RNSendBirdCalls.DirectCallDidConnect, body:params)
     }
 
+    // MARK: DirectCallDelegate
     func didEnd(_ call: DirectCall) {
        var callId: UUID = UUID()
        if let callUUID = call.callUUID {
            callId = callUUID
        }
        print("RNSendBirdCalls:didEnd")
-        let params = [
-            "callId": call.callId as Any,
-            "callee": call.callee?.userId as Any,
-            "caller": call.caller?.userId as Any,
-            "duration": call.duration as Any
-        ] as [String : Any]
+        let params = buildParams(call)
         self.sendEvent(withName: RNSendBirdCalls.DirectCallDidEnd, body: params)
        CXCallManager.shared.endCall(for: callId, endedAt: Date(), reason: call.endResult)
 
@@ -208,4 +260,35 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
        //UserDefaults.standard.callHistories.insert(CallHistory(callLog: callLog), at: 0)
        //CallHistoryViewController.main?.updateCallHistories()
     }
+    
+    // MARK: DirectCallDelegate
+    func didRemoteAudioSettingsChange(_ call: DirectCall) {
+     print("RNSendBirdCalls:didConnect")
+        let params = buildParams(call)
+        self.sendEvent(withName: RNSendBirdCalls.DirectCallRemoteAudioSettingsChanged, body:params)
+    }
+    
+    // MARK: DirectCallDelegate
+    func didRemoteVideoSettingsChange(_ call: DirectCall) {
+        let params = buildParams(call)
+        self.sendEvent(withName: RNSendBirdCalls.DirectCallVideoSettingsChanged, body:params)
+    }
+    
+    private func buildParams(_ call: DirectCall) -> [String : Any] {
+        var params = [
+            "callId": call.callId as Any,
+            "callee": call.callee?.userId as Any,
+            "caller": call.caller?.userId as Any,
+            "duration": call.duration as Any,
+            "isVideoCall": call.isVideoCall as Any,
+            "isLocalAudioEnabled": call.isLocalAudioEnabled as Any,
+            "isRemoteAudioEnabled": call.isRemoteAudioEnabled as Any,
+        ] as [String : Any]
+        if (call.isVideoCall) {
+            params.updateValue(call.isRemoteVideoEnabled as Any, forKey: "isRemoteVideoEnabled")
+            params.updateValue(call.isLocalVideoEnabled as Any, forKey: "isLocalVideoEnabled")
+        }
+        return params;
+    }
+    
 }

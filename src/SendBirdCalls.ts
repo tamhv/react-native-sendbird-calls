@@ -99,6 +99,14 @@ class SendBirdCalls implements ISendbirdCalls {
   }
 
   addEventListener = (event: string, handler: (callData: ICallResponse) => void): void => {
+    if (Platform.OS === "ios") {
+      if (event === this.eventType.REMOTE_AUDIO_CHANGED
+         || event === this.eventType.REMOTE_VIDEO_CHANGED
+         || event === this.eventType.RINGING
+         || event === this.eventType.ACCEPTED) {
+        return;
+      }
+    }
     const subscription = this._eventEmitter.addListener(event, handler)
     this._eventHandlers.set(event, subscription)
   }
