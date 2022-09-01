@@ -6,11 +6,13 @@ import UIKit
 import React
 
 @objc(RNSendBirdCalls)
-class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate, PKPushRegistryDelegate {
+class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate, PKPushRegistryDelegate, UIApplicationDelegate {
 
     var queue: DispatchQueue = DispatchQueue(label: "RNSendBirdCalls")
     var voipRegistry: PKPushRegistry?
 
+    static let DirectCallRinging = "SendBirdCallRinging"
+    static let DirectCallDidAccept = "DirectCallDidAccept"
     static let DirectCallDidConnect = "DirectCallDidConnect"
     static let DirectCallDidEnd = "DirectCallDidEnd"
     static let DirectCallRemoteAudioSettingsChanged = "DirectCallRemoteAudioSettingsChanged"
@@ -26,7 +28,9 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
             RNSendBirdCalls.DirectCallDidConnect,
             RNSendBirdCalls.DirectCallDidEnd,
             RNSendBirdCalls.DirectCallRemoteAudioSettingsChanged,
-            RNSendBirdCalls.DirectCallVideoSettingsChanged
+            RNSendBirdCalls.DirectCallVideoSettingsChanged,
+            RNSendBirdCalls.DirectCallRinging,
+            RNSendBirdCalls.DirectCallDidAccept
         ]
       }
 
@@ -88,11 +92,32 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         let params = buildParams(call)
         resolve(params)
     }
+    
+    @objc func acceptCall(_ callId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        guard let call = SendBirdCall.getCall(forCallId: callId) else {
+            reject("0","Call not found",nil)
+            return
+        }
+        call.accept(with: AcceptParams())
+        call.delegate = self
+        
+        var callId: UUID = UUID()
+        if let callUUID = call.callUUID {
+            callId = callUUID
+        }
+//        CXCallManager.shared.endCXCall(call)
+        let params = buildParams(call)
+        resolve(params)
+    }
 
     @objc func voipRegistration() {
         self.voipRegistry = PKPushRegistry(queue: DispatchQueue.main)
         self.voipRegistry?.delegate = self
         self.voipRegistry?.desiredPushTypes = [.voIP]
+    }
+    
+    @objc func registerPushToken(_ token: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        resolve(true);
     }
     
     @objc func addDirectCallSound(_ soundType: String, filename: String) {
@@ -235,6 +260,15 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
            // Report the incoming call to the system
            CXCallManager.shared.reportIncomingCall(with: uuid, update: update)
        }
+        let params = buildParams(call)
+        self.sendEvent(withName: RNSendBirdCalls.DirectCallRinging, body:params)
+    }
+    
+    // MARK: DirectCallDelegate
+    func didEstablish(_ call: DirectCall) {
+        print("RNSendBirdCalls:didConnect")
+        let params = buildParams(call)
+        self.sendEvent(withName: RNSendBirdCalls.DirectCallDidConnect, body:params)
     }
 
     // MARK: DirectCallDelegate
@@ -278,7 +312,9 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         var params = [
             "callId": call.callId as Any,
             "callee": call.callee?.userId as Any,
+            "calleeNickname": call.callee?.nickname as Any,
             "caller": call.caller?.userId as Any,
+            "callerNickname": call.caller?.nickname as Any,
             "duration": call.duration as Any,
             "isVideoCall": call.isVideoCall as Any,
             "isLocalAudioEnabled": call.isLocalAudioEnabled as Any,

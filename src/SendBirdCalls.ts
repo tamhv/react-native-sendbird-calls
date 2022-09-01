@@ -99,14 +99,6 @@ class SendBirdCalls implements ISendbirdCalls {
   }
 
   addEventListener = (event: string, handler: (callData: ICallResponse) => void): void => {
-    if (Platform.OS === "ios") {
-      if (event === this.eventType.REMOTE_AUDIO_CHANGED
-         || event === this.eventType.REMOTE_VIDEO_CHANGED
-         || event === this.eventType.RINGING
-         || event === this.eventType.ACCEPTED) {
-        return;
-      }
-    }
     const subscription = this._eventEmitter.addListener(event, handler)
     this._eventHandlers.set(event, subscription)
   }
@@ -119,15 +111,11 @@ class SendBirdCalls implements ISendbirdCalls {
   }
 
   setCallConnectionTimeout(second: number): void {
-    if (isAndroid) {
-      RNSendBirdCalls.setCallConnectionTimeout(second);
-    }
+    RNSendBirdCalls.setCallConnectionTimeout(second);
   }
 
   setRingingTimeout(second: number): void {
-    if (isAndroid) {
-      RNSendBirdCalls.setRingingTimeout(second);
-    }
+    RNSendBirdCalls.setRingingTimeout(second);
   }
 
   handleFirebaseMessageData = async (data: any): Promise<boolean> => {

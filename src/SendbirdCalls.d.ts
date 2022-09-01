@@ -148,7 +148,9 @@ export interface ISendbirdCalls {
 export interface ICallResponse {
     callId: string;
     callee: string;
+    calleeNickname: string;
     caller: string;
+    callerNickname: string;
     duration?: number;
     isVideoCall?: boolean;
     isLocalAudioEnabled?: boolean;
