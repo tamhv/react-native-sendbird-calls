@@ -6,7 +6,7 @@ import UIKit
 import React
 
 @objc(RNSendBirdCalls)
-class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate, PKPushRegistryDelegate, UIApplicationDelegate {
+class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate, PKPushRegistryDelegate {
 
     var queue: DispatchQueue = DispatchQueue(label: "RNSendBirdCalls")
     var voipRegistry: PKPushRegistry?
@@ -117,7 +117,15 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
     }
     
     @objc func registerPushToken(_ token: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-        resolve(true);
+        SendBirdCall.registerRemotePush(token: token.data(using: .utf8), unique: false) { (error) in
+            guard error == nil else {
+                let code = "\(error?.errorCode.rawValue ?? 0)"
+                let message = error?.localizedDescription
+                reject(code,message, nil)
+                return
+            }
+            resolve(true)
+        }
     }
     
     @objc func addDirectCallSound(_ soundType: String, filename: String) {
