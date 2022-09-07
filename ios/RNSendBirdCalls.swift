@@ -327,6 +327,8 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
             "isVideoCall": call.isVideoCall as Any,
             "isLocalAudioEnabled": call.isLocalAudioEnabled as Any,
             "isRemoteAudioEnabled": call.isRemoteAudioEnabled as Any,
+            "endResult": call.endResult as Any,
+            "myRole": call.myRole as Any,
         ] as [String : Any]
         if (call.isVideoCall) {
             params.updateValue(call.isRemoteVideoEnabled as Any, forKey: "isRemoteVideoEnabled")

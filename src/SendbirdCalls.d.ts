@@ -145,18 +145,32 @@ export interface ISendbirdCalls {
     unmuteMicrophone(callId: string): Promise<boolean>;
 }
 
+export enum IEndResult {
+    NONE = 'none',
+    NO_ANSWER = 'no_answer',
+    CANCELED = 'canceled',
+    DECLINED = 'declined',
+    COMPLETED = 'completed',
+    TIMED_OUT = 'timed_out',
+    CONNECTION_LOST = 'connection_lost',
+    UNKNOWN = 'unknown',
+    DIAL_FAILED = 'dial_failed',
+    ACCEPT_FAILED = 'accepted_failed',
+    OTHER_DEVICE_ACCEPTED = 'other_device_accepted',
+}
+
 export interface ICallResponse {
     callId: string;
     callee: string;
-    calleeNickname: string;
     caller: string;
-    callerNickname: string;
     duration?: number;
     isVideoCall?: boolean;
     isLocalAudioEnabled?: boolean;
     isLocalVideoEnabled?: boolean;
     isRemoteAudioEnabled?: boolean;
     isRemoteVideoEnabled?: boolean;
+    endResult: IEndResult,
+    myRole?: 'dc_callee' | 'dc_caller',
 }
 
 export interface ISoundTypes {

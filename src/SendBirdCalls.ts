@@ -1,4 +1,4 @@
-import { ICallResponse, IEventTypes, ISendbirdCalls, IUserResponse } from './SendbirdCalls.d';
+import { ICallResponse, IEventTypes, ISendbirdCalls, IUserResponse, IEndResult } from './SendbirdCalls.d';
 import { NativeModules, NativeEventEmitter, DeviceEventEmitter, Platform } from 'react-native'
 
 const { RNSendBirdCalls } = NativeModules
@@ -8,6 +8,7 @@ const isAndroid = Platform.OS === 'android'
 
 export type SendbirdCallsProps = ISendbirdCalls;
 export type CallResponse = ICallResponse;
+export const EndResult = IEndResult;
 
 class SendBirdCalls implements ISendbirdCalls {
   private _eventHandlers: Map<any, any>;
