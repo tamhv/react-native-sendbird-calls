@@ -256,7 +256,7 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
        let update = CXCallUpdate()
        update.remoteHandle = CXHandle(type: .generic, value: name)
        update.hasVideo = call.isVideoCall
-       update.localizedCallerName = call.caller?.userId ?? "Unknown"
+       update.localizedCallerName = call.caller?.nickname ?? call.caller?.userId ?? "Unknown"
 
        if SendBirdCall.getOngoingCallCount() > 1 {
            // Allow only one ongoing call.
