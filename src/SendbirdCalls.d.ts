@@ -171,6 +171,8 @@ export interface ICallResponse {
     isRemoteVideoEnabled?: boolean;
     endResult: IEndResult,
     myRole?: 'dc_callee' | 'dc_caller',
+    callerNickname: string;
+    calleeNickname: string;
 }
 
 export interface ISoundTypes {
