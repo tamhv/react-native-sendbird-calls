@@ -427,7 +427,9 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
         WritableMap params = Arguments.createMap();
         params.putString("callId", call.getCallId());
         params.putString("caller", call.getCaller().getUserId());
+        params.putString("callerNickname", call.getCaller().getNickname());
         params.putString("callee", call.getCallee().getUserId());
+        params.putString("calleeNickname", call.getCallee().getNickname());
         params.putDouble("duration", call.getDuration());
         params.putBoolean("isVideoCall", call.isVideoCall());
         params.putBoolean("isLocalAudioEnabled", call.isLocalAudioEnabled());
