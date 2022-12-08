@@ -90,11 +90,11 @@ class SendBirdCalls implements ISendbirdCalls {
     return false;
   }
 
-  setDirectCallDialingSoundOnWhenSilentOrVibrateMode = async (b:boolean): Promise<boolean> => {
+  setDirectCallDialingSoundOnWhenSilentOrVibrateMode = async (enabled:boolean): Promise<boolean> => {
     if(isAndroid) {
-      return await RNSendBirdCalls.setDirectCallDialingSoundOnWhenSilentOrVibrateMode(b)
+      return await RNSendBirdCalls.setDirectCallDialingSoundOnWhenSilentOrVibrateMode(enabled)
     }else if(isIOS){
-      return await RNSendBirdCalls.setDirectCallDialingSoundOnWhenSilentMode(b)
+      return await RNSendBirdCalls.setDirectCallDialingSoundOnWhenSilentMode(enabled)
     }
     return false;
   }
