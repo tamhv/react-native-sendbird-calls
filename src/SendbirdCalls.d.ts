@@ -143,6 +143,13 @@ export interface ISendbirdCalls {
     * @throws {SendBirdError}
     */
     unmuteMicrophone(callId: string): Promise<boolean>;
+    
+    /**
+    *
+    * @param enabled
+    * @throws {SendBirdError}
+    */
+    setDirectCallDialingSoundOnWhenSilentOrVibrateMode(enabled: boolean): Promise<boolean>;
 }
 
 export enum IEndResult {
