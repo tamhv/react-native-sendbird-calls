@@ -42,6 +42,10 @@ class SendBirdCalls implements ISendbirdCalls {
   authenticate = async (userId: string, accessToken: string): Promise<IUserResponse> => {
       return await RNSendBirdCalls.authenticate(userId, accessToken)
   }
+  
+  deauthenticate = async (): Promise<boolean> => {
+      return await RNSendBirdCalls.deauthenticate()
+  }
 
   setupVoIP = async (): Promise<void> => {
     if (isIOS){
