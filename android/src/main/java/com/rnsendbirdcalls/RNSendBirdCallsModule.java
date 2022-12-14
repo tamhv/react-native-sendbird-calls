@@ -308,10 +308,14 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
     public void handleFirebaseMessageData(ReadableMap readableMap, Promise promise) {
         Map<String, String> data = ReactNativeJson.readableMapToMap(readableMap);
         if (data != null) {
-            if (SendBirdCall.handleFirebaseMessageData(data)) {
+            try {
+                if (SendBirdCall.handleFirebaseMessageData(data)) {
 //            Log.i("RNSendBirdCalls", "[MyFirebaseMessagingService] onMessageReceived() => " + data.toString());
-                promise.resolve(true);
-            } else {
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "Failed to handle FCM");
+                }
+            } catch (Exception e) {
                 promise.reject("0", "Failed to handle FCM");
             }
         } else {
