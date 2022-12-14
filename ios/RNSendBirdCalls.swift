@@ -57,6 +57,19 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
             resolve(["userId": user.userId, "nickname": user.nickname])
         }
     }
+    
+    @objc func deauthenticate(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        SendBirdCall.deauthenticate() { error in
+           guard let error == nil else {
+                
+                let code = "\(error?.errorCode.rawValue ?? 0)"
+                let message = error?.localizedDescription
+                reject(code,message, nil)
+                return
+            }
+            resolve(true)
+        }
+    }
 
     @objc func dial(_ calleeId: String, isVideoCall: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock){
 
