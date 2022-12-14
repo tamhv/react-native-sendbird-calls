@@ -19,6 +19,12 @@ export interface ISendbirdCalls {
       * @throws {SendBirdError}
       */
      authenticate(userId: string, accessToken: string): Promise<IUserResponse>;
+    
+    /**
+     *
+     * @throws {SendBirdError}
+     */
+    deauthenticate(): Promise<boolean>;
  
      /**
       *
