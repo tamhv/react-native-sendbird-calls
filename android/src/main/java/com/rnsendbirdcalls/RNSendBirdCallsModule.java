@@ -198,6 +198,21 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
             }
         });
     }
+    
+    @ReactMethod
+    public void deauthenticate(Promise promise) {
+        try {
+            SendBirdCall.deauthenticate( (e) -> {
+                if (e == null) {
+                    promise.resolve(true);
+                } else {
+                    promise.reject(String.format("%s ", e.getCode()), e.toString());
+                }
+            });
+        } catch (Exception e) {
+            promise.reject("0", e.toString());
+        }
+    }
 
     @ReactMethod
     public void registerPushToken(String token, Promise promise) {
