@@ -60,8 +60,7 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
     
     @objc func deauthenticate(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         SendBirdCall.deauthenticate() { error in
-           guard let error == nil else {
-                
+            guard error == nil else {
                 let code = "\(error?.errorCode.rawValue ?? 0)"
                 let message = error?.localizedDescription
                 reject(code,message, nil)
