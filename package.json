@@ -1,7 +1,7 @@
 {
   "name": "react-native-sendbird-calls",
   "title": "React Native Sendbird Calls",
-  "version": "1.0.0-beta7-11",
+  "version": "1.0.0-beta7-12",
   "description": "TODO",
   "main": "index.ts",
   "files": [
