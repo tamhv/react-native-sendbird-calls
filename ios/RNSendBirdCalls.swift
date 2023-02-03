@@ -328,7 +328,7 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
         self.sendEvent(withName: RNSendBirdCalls.DirectCallVideoSettingsChanged, body:params)
     }
     
-    private func buildParams(_ call: DirectCall) -> [String : Any] {
+    private func buildParams(_ call: DirectCall) -> [String : Any?] {
         var params = [
             "callId": call.callId as Any,
             "callee": call.callee?.userId as Any,
@@ -340,7 +340,7 @@ class RNSendBirdCalls: RCTEventEmitter, SendBirdCallDelegate, DirectCallDelegate
             "isLocalAudioEnabled": call.isLocalAudioEnabled as Any,
             "isRemoteAudioEnabled": call.isRemoteAudioEnabled as Any,
             "endResult": call.endResult.rawValue as Any,
-            "myRole": call.myRole.rawValue as Any,
+            "myRole": call.myRole == .caller ? "dc_caller" : "dc_callee",
         ] as [String : Any]
         if (call.isVideoCall) {
             params.updateValue(call.isRemoteVideoEnabled as Any, forKey: "isRemoteVideoEnabled")
