@@ -2,13 +2,20 @@
 
 package com.rnsendbirdcalls;
 
+import android.content.Context;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.sendbird.calls.AuthenticateParams;
@@ -22,18 +29,24 @@ import com.sendbird.calls.handler.SendBirdCallListener;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
 
+    private final Context context;
     private final ReactApplicationContext reactContext;
+    private final Vibrator vibrator;
 
-    public RNSendBirdCallsModule(ReactApplicationContext reactContext) {
-        super(reactContext);
-        this.reactContext = reactContext;
+    public RNSendBirdCallsModule(ReactApplicationContext reactApplicationContext) {
+        super(reactApplicationContext);
+        this.context = reactApplicationContext.getApplicationContext();
+        this.reactContext = reactApplicationContext;
+        this.vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
+    @NonNull
     @Override
     public String getName() {
         return "RNSendBirdCalls";
@@ -51,18 +64,35 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void configure(String appId, Promise promise) {
-        if (SendBirdCall.init(getReactApplicationContext(), appId)) {
+        long[] vibratePattern = {100, 300, 500, 300, 500, 300};
+        int repeat = 0;
+        if (SendBirdCall.init(context, appId)) {
             SendBirdCall.removeAllListeners();
             SendBirdCall.addListener(UUID.randomUUID().toString(), new SendBirdCallListener() {
                 @Override
                 public void onRinging(@NotNull DirectCall directCall) {
                     Log.i(getName(), "onRinging");
+                    int ongoingCallCount = SendBirdCall.getOngoingCallCount();
+                    if (ongoingCallCount >= 2) {
+                        vibrator.cancel();
+                        directCall.end();
+                        return;
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(
+                                VibrationEffect.createWaveform(
+                                        vibratePattern,
+                                        repeat
+                                )
+                        );
+                    } else {
+                        vibrator.vibrate(vibratePattern, repeat);
+                    }
+
+                    directCall.unmuteMicrophone();
                     setListener(directCall);
-                    WritableMap params = Arguments.createMap();
-                    params.putString("callId", directCall.getCallId());
-                    params.putString("caller", directCall.getCaller().getUserId());
-                    params.putString("callee", directCall.getCallee().getUserId());
-                    params.putBoolean("isVideoCall", directCall.isVideoCall());
+                    WritableMap params = createCallParams(directCall);
                     reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("SendBirdCallRinging", params);
                 }
             });
@@ -75,59 +105,75 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void addDirectCallSound(String soundType, String filename, Promise promise) {
-        if(soundType.equals("DIALING")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.DIALING, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+        switch (soundType) {
+            case "DIALING": {
+                int id = context.getResources().getIdentifier(filename, "raw", context.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.DIALING, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else if(soundType.equals("RINGING")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RINGING, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+            case "RINGING": {
+                int id = context.getResources().getIdentifier(filename, "raw", context.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RINGING, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else if(soundType.equals("RECONNECTED")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTED, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+            case "RECONNECTED": {
+                int id = context.getResources().getIdentifier(filename, "raw", context.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTED, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else if(soundType.equals("RECONNECTING")){
-            int id = reactContext.getResources().getIdentifier(filename, "raw", reactContext.getPackageName());
-            if (id > 0) {
-                SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTING, id);
-                promise.resolve(true);
-            } else {
-                promise.reject("0", "File not found");
+            case "RECONNECTING": {
+                int id = context.getResources().getIdentifier(filename, "raw", context.getPackageName());
+                if (id > 0) {
+                    SendBirdCall.Options.addDirectCallSound(SendBirdCall.SoundType.RECONNECTING, id);
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "File not found");
+                }
+                break;
             }
-        }else{
-            promise.reject("0", "Sound type not found");
+            default:
+                promise.reject("0", "Sound type not found");
+                break;
         }
     }
 
     @ReactMethod
     public void removeDirectCallSound(String soundType, Promise promise) {
-        if(soundType.equals("DIALING")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.DIALING);
-            promise.resolve(true);
-        }else if(soundType.equals("RINGING")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RINGING);
-            promise.resolve(true);
-        }else if(soundType.equals("RECONNECTED")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTED);
-            promise.resolve(true);
-        }else if(soundType.equals("RECONNECTING")){
-            SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTING);
-            promise.resolve(true);
-        }else{
-            promise.reject("0", "Sound type not found");
+        switch (soundType) {
+            case "DIALING":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.DIALING);
+                promise.resolve(true);
+                break;
+            case "RINGING":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RINGING);
+                promise.resolve(true);
+                break;
+            case "RECONNECTED":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTED);
+                promise.resolve(true);
+                break;
+            case "RECONNECTING":
+                SendBirdCall.Options.removeDirectCallSound(SendBirdCall.SoundType.RECONNECTING);
+                promise.resolve(true);
+                break;
+            default:
+                promise.reject("0", "Sound type not found");
+                break;
         }
     }
 
@@ -152,6 +198,21 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
             }
         });
     }
+    
+    @ReactMethod
+    public void deauthenticate(Promise promise) {
+        try {
+            SendBirdCall.deauthenticate( (e) -> {
+                if (e == null) {
+                    promise.resolve(true);
+                } else {
+                    promise.reject(String.format("%s ", e.getCode()), e.toString());
+                }
+            });
+        } catch (Exception e) {
+            promise.reject("0", e.toString());
+        }
+    }
 
     @ReactMethod
     public void registerPushToken(String token, Promise promise) {
@@ -160,6 +221,34 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
                 if (e != null) {
                     Log.i("RNSendBirdCalls", "registerPushToken => e: " + e.getMessage());
                     promise.reject("registerPushToken", e.getMessage(), e);
+                } else {
+                    promise.resolve(true);
+                }
+            });
+        }
+    }
+
+    @ReactMethod
+    public void unregisterPushToken(String token, Promise promise) {
+        if (SendBirdCall.getCurrentUser() != null) {
+            SendBirdCall.unregisterPushToken(token, e -> {
+                if (e != null) {
+                    Log.i("RNSendBirdCalls", "unregisterPushToken => e: " + e.getMessage());
+                    promise.reject("unregisterPushToken", e.getMessage(), e);
+                } else {
+                    promise.resolve(true);
+                }
+            });
+        }
+    }
+
+    @ReactMethod
+    public void unregisterAllPushTokens(Promise promise) {
+        if (SendBirdCall.getCurrentUser() != null) {
+            SendBirdCall.unregisterAllPushTokens(e -> {
+                if (e != null) {
+                    Log.i("RNSendBirdCalls", "unregisterAllPushTokens => e: " + e.getMessage());
+                    promise.reject("unregisterAllPushTokens", e.getMessage(), e);
                 } else {
                     promise.resolve(true);
                 }
@@ -181,11 +270,13 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            WritableMap params = Arguments.createMap();
-            params.putString("callId", call.getCallId());
-            params.putString("caller", call.getCaller().getUserId());
-            params.putString("callee", call.getCallee().getUserId());
-            promise.resolve(params);
+            if (call != null) {
+                call.unmuteMicrophone();
+                WritableMap params = createCallParams(call);
+                promise.resolve(params);
+            } else {
+                promise.reject("0", "Failed to dial the call");
+            }
         });
 
         if (mDirectCall != null) {
@@ -198,11 +289,7 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
         DirectCall directCall = SendBirdCall.getCall(callId);
         if (directCall != null) {
             directCall.end();
-            WritableMap params = Arguments.createMap();
-            params.putString("callId", directCall.getCallId());
-            params.putString("caller", directCall.getCaller().getUserId());
-            params.putString("callee", directCall.getCallee().getUserId());
-            params.putString("duration", String.valueOf(directCall.getDuration()));
+            WritableMap params = createCallParams(directCall);
             promise.resolve(params);
         } else {
             promise.reject("0", "Call not found");
@@ -213,11 +300,99 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
     public void acceptCall(String callId, Promise promise) {
         DirectCall directCall = SendBirdCall.getCall(callId);
         if (directCall != null) {
+            directCall.unmuteMicrophone();
             AcceptParams acceptParams = new AcceptParams();
             directCall.accept(acceptParams);
             promise.resolve(true);
         } else {
             promise.reject("0", "Call not found");
+        }
+    }
+
+    @ReactMethod
+    public void setCallConnectionTimeout(int s) {
+        SendBirdCall.Options.setCallConnectionTimeout(s);
+    }
+
+    @ReactMethod
+    public void setRingingTimeout(int s) {
+        SendBirdCall.Options.setRingingTimeout(s);
+    }
+
+    @ReactMethod
+    public void handleFirebaseMessageData(ReadableMap readableMap, Promise promise) {
+        Map<String, String> data = ReactNativeJson.readableMapToMap(readableMap);
+        if (data != null) {
+            try {
+                if (SendBirdCall.handleFirebaseMessageData(data)) {
+//            Log.i("RNSendBirdCalls", "[MyFirebaseMessagingService] onMessageReceived() => " + data.toString());
+                    promise.resolve(true);
+                } else {
+                    promise.reject("0", "Failed to handle FCM");
+                }
+            } catch (Exception e) {
+                promise.reject("0", "Failed to handle FCM");
+            }
+        } else {
+            promise.reject("0", "Failed to handle FCM");
+        }
+    }
+
+    @ReactMethod
+    public void switchCamera(String callId, Promise promise) {
+        DirectCall directCall = SendBirdCall.getCall(callId);
+        if (directCall != null) {
+            directCall.switchCamera(e -> {
+                if (e != null) {
+                    promise.reject(String.format("%s", e.getCode()), e.getMessage());
+                    return;
+                }
+                promise.resolve(true);
+            });
+        } else {
+            promise.reject("0", "Failed to switch camera");
+        }
+    }
+
+    @ReactMethod
+    public void stopVideo(String callId, Promise promise) {
+        DirectCall directCall = SendBirdCall.getCall(callId);
+        if (directCall != null) {
+            directCall.stopVideo();
+            promise.resolve(true);
+        } else {
+            promise.reject("0", "Failed to stop video");
+        }
+    }
+
+    @ReactMethod
+    public void startVideo(String callId, Promise promise) {
+        DirectCall directCall = SendBirdCall.getCall(callId);
+        if (directCall != null) {
+            directCall.startVideo();
+            promise.resolve(true);
+        } else {
+            promise.reject("0", "Failed to start video");
+        }
+    }
+
+    @ReactMethod
+    public void muteMicrophone(String callId, Promise promise) {
+        DirectCall directCall = SendBirdCall.getCall(callId);
+        if (directCall != null) {
+            promise.resolve(directCall.muteMicrophone());
+        } else {
+            promise.reject("0", "Failed to mute microphone");
+        }
+    }
+
+    @ReactMethod
+    public void unmuteMicrophone(String callId, Promise promise) {
+        DirectCall directCall = SendBirdCall.getCall(callId);
+        if (directCall != null) {
+            promise.resolve(directCall.unmuteMicrophone());
+        } else {
+            promise.reject("0", "Failed to unmute microphone");
         }
     }
 
@@ -227,36 +402,64 @@ public class RNSendBirdCallsModule extends ReactContextBaseJavaModule {
             public void onEstablished(@NotNull DirectCall directCall) {
                 //Remote user accepted the call.
                 Log.i(getName(), "onEstablished");
-                WritableMap params = Arguments.createMap();
-                params.putString("callId", directCall.getCallId());
-                params.putString("caller", directCall.getCaller().getUserId());
-                params.putString("callee", directCall.getCallee().getUserId());
-                params.putBoolean("isVideoCall", directCall.isVideoCall());
+                WritableMap params = createCallParams(directCall);
                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallDidAccept", params);
             }
 
             @Override
             public void onConnected(@NotNull DirectCall directCall) {
                 Log.i(getName(), "onConnected");
-                WritableMap params = Arguments.createMap();
-                params.putString("callId", directCall.getCallId());
-                params.putString("caller", directCall.getCaller().getUserId());
-                params.putString("callee", directCall.getCallee().getUserId());
-                params.putBoolean("isVideoCall", directCall.isVideoCall());
+                vibrator.cancel();
+                WritableMap params = createCallParams(directCall);
                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallDidConnect", params);
             }
 
             @Override
             public void onEnded(@NotNull DirectCall directCall) {
                 Log.i(getName(), "onEnded");
-                WritableMap params = Arguments.createMap();
-                params.putString("callId", directCall.getCallId());
-                params.putString("caller", directCall.getCaller().getUserId());
-                params.putString("callee", directCall.getCallee().getUserId());
-                params.putDouble("duration", directCall.getDuration());
+                vibrator.cancel();
+                WritableMap params = createCallParams(directCall);
                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallDidEnd", params);
             }
+
+            @Override
+            public void onRemoteAudioSettingsChanged(@NonNull DirectCall directCall) {
+                Log.i(getName(), "onRemoteAudioSettingsChanged");
+                if (call.getRemoteUser() != null) {
+                    WritableMap params = createCallParams(directCall);
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallRemoteAudioSettingsChanged", params);
+                }
+            }
+
+            @Override
+            public void onRemoteVideoSettingsChanged(@NonNull DirectCall directCall) {
+                Log.i(getName(), "onRemoteAudioSettingsChanged");
+                if (call.getRemoteUser() != null) {
+                    WritableMap params = createCallParams(directCall);
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("DirectCallVideoSettingsChanged", params);
+                }
+            }
         });
+    }
+
+    private WritableMap createCallParams(@NotNull DirectCall call) {
+        WritableMap params = Arguments.createMap();
+        params.putString("callId", call.getCallId());
+        params.putString("caller", call.getCaller().getUserId());
+        params.putString("callerNickname", call.getCaller().getNickname());
+        params.putString("callee", call.getCallee().getUserId());
+        params.putString("calleeNickname", call.getCallee().getNickname());
+        params.putDouble("duration", call.getDuration());
+        params.putBoolean("isVideoCall", call.isVideoCall());
+        params.putBoolean("isLocalAudioEnabled", call.isLocalAudioEnabled());
+        params.putBoolean("isRemoteAudioEnabled", call.isRemoteAudioEnabled());
+        params.putString("endResult", call.getEndResult().toString());
+        params.putString("myRole", call.getMyRole().toString());
+        if (call.isVideoCall()) {
+            params.putBoolean("isLocalVideoEnabled", call.isLocalVideoEnabled());
+            params.putBoolean("isRemoteVideoEnabled", call.isRemoteVideoEnabled());
+        }
+        return params;
     }
 
     public static void onMessageReceived(Map<String, String> data) {

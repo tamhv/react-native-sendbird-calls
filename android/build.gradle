@@ -22,7 +22,7 @@ def safeExtGet(prop, fallback) {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 buildscript {
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
@@ -67,6 +67,10 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
+    maven { url "https://repo.sendbird.com/public/maven" }
+    maven {
+        url = uri("${rootProject.projectDir}/maven-repo")
+    }
 }
 
 dependencies {
@@ -109,7 +113,8 @@ afterEvaluate { project ->
     task androidJavadoc(type: Javadoc) {
         source = android.sourceSets.main.java.srcDirs
         classpath += files(android.bootClasspath)
-        classpath += files(project.getConfigurations().getByName('compile').asList())
+        project.getConfigurations().getByName('implementation').setCanBeResolved(true)
+        classpath += files(project.getConfigurations().getByName('implementation').asList())
         include '**/*.java'
     }
 
@@ -138,12 +143,19 @@ afterEvaluate { project ->
         archives androidJavadocJar
     }
 
-    task installArchives(type: Upload) {
-        configuration = configurations.archives
-        repositories.mavenDeployer {
-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
-            repository url: "file://${projectDir}/../android/maven"
-            configureReactNativePom pom
+//    task installArchives(type: Upload) {
+//        configuration = configurations.archives
+//        repositories.mavenDeployer {
+//            // Deploy to react-native-event-bridge/maven, ready to publish to npm
+//            repository url: "file://${projectDir}/../android/maven"
+//            configureReactNativePom pom
+//        }
+//    }
+}
+publishing {
+    repositories {
+        maven {
+            url = uri("file://${projectDir}/../android/maven")
         }
     }
 }

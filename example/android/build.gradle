@@ -40,6 +40,8 @@ allprojects {
         maven {
           url "$rootDir/../node_modules/@notifee/react-native/android/libs"
         }
+        // Sendbird
+        maven { url "https://repo.sendbird.com/public/maven" }
 
     }
 }
